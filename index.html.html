@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Probability Distributions — C8 & C9</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #151820;
+    --surface2: #1c2030;
+    --border: #2a3040;
+    --accent: #5b8dee;
+    --accent2: #e05b8d;
+    --accent3: #5be0b0;
+    --accent4: #e0c05b;
+    --text: #e8eaf0;
+    --muted: #7a8299;
+    --mono: 'Space Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #0d0f14 0%, #111520 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 40px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  header .logo {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    border: 1px solid var(--accent);
+    padding: 4px 10px;
+    border-radius: 3px;
+  }
+  header h1 {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  header p { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+  /* ── TABS ── */
+  .tabs-bar {
+    display: flex;
+    gap: 2px;
+    background: var(--surface);
+    padding: 12px 40px 0;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .tab-btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-btn.c9 { color: var(--accent3); }
+  .tab-btn.c9.active { color: var(--accent3); border-bottom-color: var(--accent3); }
+
+  /* ── MAIN LAYOUT ── */
+  .tab-content { display: none; padding: 32px 40px; }
+  .tab-content.active { display: block; }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+  }
+  .card h2 {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+  .card.green h2 { color: var(--accent3); }
+  .card.pink h2 { color: var(--accent2); }
+
+  /* ── INPUTS ── */
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    font-family: var(--mono);
+  }
+  .field input, .field select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 9px 12px;
+    transition: border-color 0.2s;
+  }
+  .field input:focus, .field select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  /* ── PROB SECTION ── */
+  .prob-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .prob-section h3 {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--accent2);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .radio-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+  .radio-group label {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--text); cursor: pointer;
+  }
+  .radio-group input[type=radio] { accent-color: var(--accent2); }
+
+  /* ── RESULT BOX ── */
+  .result-box {
+    background: var(--surface2);
+    border: 1px solid var(--accent2);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .result-box .label { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  .result-box .value {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent2);
+  }
+
+  /* ── CHART WRAPPER ── */
+  .chart-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    position: relative;
+  }
+  .chart-wrap canvas { max-height: 380px; }
+
+  /* ── PIECEWISE EXTRA ── */
+  .piece-row { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 10px; }
+  .piece-row input { flex: 1; }
+  .btn-small {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 6px;
+    padding: 9px 12px;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 11px;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .btn-small:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-primary {
+    width: 100%;
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    border-radius: 6px;
+    padding: 10px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: opacity 0.2s;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-primary.green { background: var(--accent3); color: #0d0f14; }
+
+  /* ── C9 SPECIFIC ── */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    margin-bottom: 18px;
+  }
+  .upload-zone:hover { border-color: var(--accent3); }
+  .upload-zone p { color: var(--muted); font-size: 13px; margin-top: 8px; }
+  .upload-zone .icon { font-size: 32px; }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 14px 0;
+  }
+  .stat-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+  .stat-chip .k { font-size: 10px; color: var(--muted); font-family: var(--mono); text-transform: uppercase; }
+  .stat-chip .v { font-family: var(--mono); font-size: 14px; color: var(--accent3); font-weight: 700; margin-top: 2px; }
+
+  .interp-box {
+    background: var(--surface2);
+    border-left: 3px solid var(--accent3);
+    border-radius: 0 6px 6px 0;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.7;
+    margin-top: 14px;
+  }
+
+  /* ── AI RECORD ── */
+  .ai-record {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px 40px;
+    margin: 32px 40px;
+  }
+  .ai-record h2 {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: var(--accent4);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .ai-record a {
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 12px;
+    text-decoration: none;
+    border-bottom: 1px solid var(--accent);
+    padding-bottom: 1px;
+  }
+  .ai-record a:hover { opacity: 0.7; }
+  .ai-record ul { padding-left: 18px; }
+  .ai-record li { font-size: 13px; color: var(--muted); margin-bottom: 6px; line-height: 1.6; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .two-col { grid-template-columns: 1fr; }
+    header, .tabs-bar, .tab-content { padding-left: 20px; padding-right: 20px; }
+    .ai-record { margin: 20px; }
+  }
+
+  .hidden-input { display: none; }
+  .badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: var(--accent);
+    color: #fff;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .badge.green { background: var(--accent3); color: #0d0f14; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">PROB</div>
+  <div>
+    <h1>Probability Distributions <span class="badge">C8</span><span class="badge green">C9</span></h1>
+    <p>Interactive PDF explorer &amp; data fitting tool</p>
+  </div>
+</header>
+
+<!-- TABS -->
+<div class="tabs-bar">
+  <button class="tab-btn active" onclick="switchTab('uniform')">Uniform</button>
+  <button class="tab-btn" onclick="switchTab('triangular')">Triangular</button>
+  <button class="tab-btn" onclick="switchTab('linear')">Linear</button>
+  <button class="tab-btn" onclick="switchTab('piecewise')">Piecewise</button>
+  <button class="tab-btn" onclick="switchTab('normal')">Normal</button>
+  <button class="tab-btn c9" onclick="switchTab('c9')">⬡ Data Fit (C9)</button>
+</div>
+
+<!-- ═══════════════════════════════ UNIFORM ═══════════════════════════════ -->
+<div id="tab-uniform" class="tab-content active">
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h2>Uniform Distribution</h2>
+        <div class="field"><label>Lower endpoint (a)</label><input type="number" id="u_a" value="2" step="0.1" oninput="drawUniform()"/></div>
+        <div class="field"><label>Upper endpoint (b)</label><input type="number" id="u_b" value="8" step="0.1" oninput="drawUniform()"/></div>
+        <div class="prob-section">
+          <h3>Probability Query</h3>
+          <div class="radio-group">
+            <label><input type="radio" name="u_type" value="below" checked onchange="drawUniform()"/> P(X ≤ x)</label>
+            <label><input type="radio" name="u_type" value="above" onchange="drawUniform()"/> P(X ≥ x)</label>
+            <label><input type="radio" name="u_type" value="between" onchange="drawUniform()"/> P(x₁ ≤ X ≤ x₂)</label>
+          </div>
+          <div class="field"><label>Point x</label><input type="number" id="u_x1" value="5" step="0.1" oninput="drawUniform()"/></div>
+          <div class="field" id="u_x2_field" style="display:none"><label>Upper point x₂</label><input type="number" id="u_x2" value="7" step="0.1" oninput="drawUniform()"/></div>
+          <div class="result-box"><div><div class="label">P =</div><div class="value" id="u_result">0.5000</div></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="chart-wrap"><canvas id="chart_uniform"></canvas></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ TRIANGULAR ═══════════════════════════════ -->
+<div id="tab-triangular" class="tab-content">
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h2>Triangular Distribution</h2>
+        <div class="field"><label>Lower endpoint (a)</label><input type="number" id="t_a" value="1" step="0.1" oninput="drawTriangular()"/></div>
+        <div class="field"><label>Mode (c)</label><input type="number" id="t_c" value="4" step="0.1" oninput="drawTriangular()"/></div>
+        <div class="field"><label>Upper endpoint (b)</label><input type="number" id="t_b" value="9" step="0.1" oninput="drawTriangular()"/></div>
+        <div class="prob-section">
+          <h3>Probability Query</h3>
+          <div class="radio-group">
+            <label><input type="radio" name="t_type" value="below" checked onchange="drawTriangular()"/> P(X ≤ x)</label>
+            <label><input type="radio" name="t_type" value="above" onchange="drawTriangular()"/> P(X ≥ x)</label>
+            <label><input type="radio" name="t_type" value="between" onchange="drawTriangular()"/> P(x₁ ≤ X ≤ x₂)</label>
+          </div>
+          <div class="field"><label>Point x</label><input type="number" id="t_x1" value="5" step="0.1" oninput="drawTriangular()"/></div>
+          <div class="field" id="t_x2_field" style="display:none"><label>Upper point x₂</label><input type="number" id="t_x2" value="7" step="0.1" oninput="drawTriangular()"/></div>
+          <div class="result-box"><div><div class="label">P =</div><div class="value" id="t_result">0.5000</div></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="chart-wrap"><canvas id="chart_triangular"></canvas></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ LINEAR ═══════════════════════════════ -->
+<div id="tab-linear" class="tab-content">
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h2>Linear Distribution</h2>
+        <div class="field"><label>Lower endpoint (a)</label><input type="number" id="l_a" value="0" step="0.1" oninput="drawLinear()"/></div>
+        <div class="field"><label>Upper endpoint (b)</label><input type="number" id="l_b" value="4" step="0.1" oninput="drawLinear()"/></div>
+        <div class="field">
+          <label>Direction</label>
+          <select id="l_dir" onchange="drawLinear()">
+            <option value="increasing">Increasing (f rises left→right)</option>
+            <option value="decreasing">Decreasing (f falls left→right)</option>
+          </select>
+        </div>
+        <p style="font-size:11px;color:var(--muted);margin-top:-8px;margin-bottom:14px;font-family:var(--mono);">Area is automatically normalised to 1.</p>
+        <div class="prob-section">
+          <h3>Probability Query</h3>
+          <div class="radio-group">
+            <label><input type="radio" name="l_type" value="below" checked onchange="drawLinear()"/> P(X ≤ x)</label>
+            <label><input type="radio" name="l_type" value="above" onchange="drawLinear()"/> P(X ≥ x)</label>
+            <label><input type="radio" name="l_type" value="between" onchange="drawLinear()"/> P(x₁ ≤ X ≤ x₂)</label>
+          </div>
+          <div class="field"><label>Point x</label><input type="number" id="l_x1" value="2" step="0.1" oninput="drawLinear()"/></div>
+          <div class="field" id="l_x2_field" style="display:none"><label>Upper point x₂</label><input type="number" id="l_x2" value="3" step="0.1" oninput="drawLinear()"/></div>
+          <div class="result-box"><div><div class="label">P =</div><div class="value" id="l_result">0.5000</div></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="chart-wrap"><canvas id="chart_linear"></canvas></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ PIECEWISE ═══════════════════════════════ -->
+<div id="tab-piecewise" class="tab-content">
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h2>Piecewise Distribution</h2>
+        <p style="font-size:11px;color:var(--muted);margin-bottom:14px;">Define contiguous intervals. Each piece has a constant height. Heights are auto-normalised so total area = 1.</p>
+        <div id="pw_pieces"></div>
+        <button class="btn-small" onclick="addPiece()" style="margin-bottom:14px;">+ Add piece</button>
+        <div class="prob-section">
+          <h3>Probability Query</h3>
+          <div class="radio-group">
+            <label><input type="radio" name="pw_type" value="below" checked onchange="drawPiecewise()"/> P(X ≤ x)</label>
+            <label><input type="radio" name="pw_type" value="above" onchange="drawPiecewise()"/> P(X ≥ x)</label>
+            <label><input type="radio" name="pw_type" value="between" onchange="drawPiecewise()"/> P(x₁ ≤ X ≤ x₂)</label>
+          </div>
+          <div class="field"><label>Point x</label><input type="number" id="pw_x1" value="3" step="0.1" oninput="drawPiecewise()"/></div>
+          <div class="field" id="pw_x2_field" style="display:none"><label>Upper point x₂</label><input type="number" id="pw_x2" value="5" step="0.1" oninput="drawPiecewise()"/></div>
+          <div class="result-box"><div><div class="label">P =</div><div class="value" id="pw_result">0.0000</div></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="chart-wrap"><canvas id="chart_piecewise"></canvas></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ NORMAL ═══════════════════════════════ -->
+<div id="tab-normal" class="tab-content">
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <h2>Normal Distribution</h2>
+        <div class="field"><label>Mean (μ)</label><input type="number" id="n_mu" value="0" step="0.1" oninput="drawNormal()"/></div>
+        <div class="field"><label>Std deviation (σ)</label><input type="number" id="n_sigma" value="1" step="0.1" min="0.01" oninput="drawNormal()"/></div>
+        <div class="prob-section">
+          <h3>Probability Query</h3>
+          <div class="radio-group">
+            <label><input type="radio" name="n_type" value="below" checked onchange="drawNormal()"/> P(X ≤ x)</label>
+            <label><input type="radio" name="n_type" value="above" onchange="drawNormal()"/> P(X ≥ x)</label>
+            <label><input type="radio" name="n_type" value="between" onchange="drawNormal()"/> P(x₁ ≤ X ≤ x₂)</label>
+          </div>
+          <div class="field"><label>Point x</label><input type="number" id="n_x1" value="1" step="0.1" oninput="drawNormal()"/></div>
+          <div class="field" id="n_x2_field" style="display:none"><label>Upper point x₂</label><input type="number" id="n_x2" value="2" step="0.1" oninput="drawNormal()"/></div>
+          <div class="result-box"><div><div class="label">P =</div><div class="value" id="n_result">0.0000</div></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="chart-wrap"><canvas id="chart_normal"></canvas></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ C9 DATA FIT ═══════════════════════════════ -->
+<div id="tab-c9" class="tab-content">
+  <div class="two-col">
+    <div>
+      <div class="card green">
+        <h2>C9 — Data Fitting</h2>
+        <div class="upload-zone" onclick="document.getElementById('csvFile').click()">
+          <div class="icon">📂</div>
+          <p>Click to upload CSV file<br/><small>Must have one numeric column (the second column is used)</small></p>
+        </div>
+        <input type="file" id="csvFile" accept=".csv" class="hidden-input" onchange="loadCSV(event)"/>
+
+        <p style="font-size:11px;color:var(--muted);margin-bottom:10px;">Or paste/enter values (one per line):</p>
+        <textarea id="manualData" rows="4" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:12px;padding:8px;resize:vertical;" placeholder="34.2&#10;36.8&#10;31.5&#10;..." oninput="parseManualData()"></textarea>
+
+        <div class="field" style="margin-top:14px;"><label>Distribution to fit</label>
+          <select id="fit_dist" onchange="fitDistribution()">
+            <option value="uniform">Uniform</option>
+            <option value="triangular">Triangular</option>
+            <option value="linear">Linear</option>
+            <option value="piecewise">Piecewise Uniform</option>
+            <option value="normal" selected>Normal</option>
+          </select>
+        </div>
+        <button class="btn-primary green" onclick="fitDistribution()">Fit Distribution</button>
+
+        <div class="stats-grid" id="fit_stats" style="display:none"></div>
+        <div id="fit_params" style="margin-top:10px;font-family:var(--mono);font-size:12px;color:var(--accent3);"></div>
+        <div class="interp-box" id="fit_interp" style="display:none"></div>
+      </div>
+    </div>
+    <div>
+      <div class="chart-wrap" style="margin-bottom:24px;"><canvas id="chart_c9_hist"></canvas></div>
+      <div class="chart-wrap"><canvas id="chart_c9_pdf"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ AI RECORD ═══════════════════════════════ -->
+<div class="ai-record">
+  <h2>⬡ AI Development Record</h2>
+  <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">This tool was built with AI-assisted programming. Below are the conversation links and documentation of AI use.</p>
+  <ul>
+    <li><strong>Conversation 1 — Website structure and planning:</strong>
+      <a href="https://chatgpt.com/share/6a249df6-8afc-83e9-8883-6d432fa34b2d" target="_blank">Open conversation</a>
+    </li>
+    <li><strong>Conversation 2 — Distribution implementation:</strong>
+      <a href="https://chatgpt.com/share/6a249dde-de94-83e9-b3a0-9cba5ef71af0" target="_blank">Open conversation</a>
+    </li>
+    <li><strong>Conversation 3 — Data fitting and debugging:</strong>
+      <a href="https://chatgpt.com/share/6a249dc5-976c-83e9-bd19-9a8a2bdaa3c0" target="_blank">Open conversation</a>
+    </li>
+    <li><strong>Prompts used:</strong> Requests to generate interactive PDF graphs for 5 distributions with parameter inputs, shaded probability regions, probability calculations, and a C9 data-fitting tab with histogram overlay.</li>
+    <li><strong>AI-generated code:</strong> All JavaScript distribution math (PDF formulas, CDF integrals via Simpson's rule, Chart.js rendering), HTML structure, and CSS theme were AI-generated.</li>
+    <li><strong>Verified/corrected:</strong> Normalisation of linear and piecewise PDFs, numeric integration accuracy, CSV parsing edge cases, and Chart.js dataset shading logic were reviewed and tested.</li>
+    <li><strong>Testing:</strong> Each distribution was tested with known analytical values (e.g. Uniform on [2,8] gives P≤5 = 0.5, Normal(0,1) gives P≤1.96 ≈ 0.975). C9 was tested with all three provided Grade-10 datasets.</li>
+  </ul>
+</div></div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   UTILITIES
+══════════════════════════════════════════════════════ */
+const STEPS = 400;
+const CHART_OPTS = (label, accent) => ({
+  responsive: true,
+  animation: false,
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      callbacks: {
+        label: ctx => `f(x) = ${ctx.parsed.y.toFixed(4)}`
+      }
+    }
+  },
+  scales: {
+    x: {
+      type: 'linear',
+      grid: { color: '#1c2030' },
+      ticks: { color: '#7a8299', font: { family: 'Space Mono', size: 10 } }
+    },
+    y: {
+      grid: { color: '#1c2030' },
+      ticks: { color: '#7a8299', font: { family: 'Space Mono', size: 10 } },
+      beginAtZero: true
+    }
+  }
+});
+
+function linspace(a, b, n) {
+  const arr = [];
+  for (let i = 0; i < n; i++) arr.push(a + (b - a) * i / (n - 1));
+  return arr;
+}
+
+// Simpson's rule numerical integration
+function simpsons(f, a, b, n = 500) {
+  if (a >= b) return 0;
+  const h = (b - a) / n;
+  let sum = f(a) + f(b);
+  for (let i = 1; i < n; i++) sum += f(a + i * h) * (i % 2 === 0 ? 2 : 4);
+  return (h / 3) * sum;
+}
+
+// Normal PDF & CDF
+function normPDF(x, mu, sigma) {
+  return Math.exp(-0.5 * ((x - mu) / sigma) ** 2) / (sigma * Math.sqrt(2 * Math.PI));
+}
+function normCDF(x, mu = 0, sigma = 1) {
+  return 0.5 * (1 + erf((x - mu) / (sigma * Math.sqrt(2))));
+}
+function erf(x) {
+  const a1=0.254829592, a2=-0.284496736, a3=1.421413741, a4=-1.453152027, a5=1.061405429, p=0.3275911;
+  const sign = x < 0 ? -1 : 1;
+  x = Math.abs(x);
+  const t = 1 / (1 + p * x);
+  const y = 1 - (((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);
+  return sign * y;
+}
+
+function getRadio(name) {
+  return document.querySelector(`input[name="${name}"]:checked`)?.value || 'below';
+}
+
+function makeShadeDataset(xs, ys, lo, hi, color) {
+  const pts = [];
+  for (let i = 0; i < xs.length; i++) {
+    if (xs[i] >= lo && xs[i] <= hi) pts.push({ x: xs[i], y: ys[i] });
+  }
+  return {
+    data: pts,
+    fill: 'origin',
+    backgroundColor: color + '55',
+    borderColor: 'transparent',
+    pointRadius: 0,
+    tension: 0
+  };
+}
+
+const charts = {};
+
+function ensureChart(id, opts) {
+  if (charts[id]) { charts[id].destroy(); }
+  const ctx = document.getElementById(id).getContext('2d');
+  charts[id] = new Chart(ctx, opts);
+  return charts[id];
+}
+
+function showX2(prefix, show) {
+  document.getElementById(`${prefix}_x2_field`).style.display = show ? '' : 'none';
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById(`tab-${name}`).classList.add('active');
+  const btns = document.querySelectorAll('.tab-btn');
+  const labels = ['uniform','triangular','linear','piecewise','normal','c9'];
+  btns[labels.indexOf(name)]?.classList.add('active');
+}
+
+/* ══════════════════════════════════════════════════════
+   UNIFORM
+══════════════════════════════════════════════════════ */
+function drawUniform() {
+  const a = +document.getElementById('u_a').value;
+  const b = +document.getElementById('u_b').value;
+  if (a >= b) return;
+  const type = getRadio('u_type');
+  showX2('u', type === 'between');
+
+  const x1 = +document.getElementById('u_x1').value;
+  const x2 = +document.getElementById('u_x2').value;
+  const h = 1 / (b - a);
+
+  // PDF points
+  const pad = (b - a) * 0.15;
+  const xs = [a - pad, a - 0.0001, a, b, b + 0.0001, b + pad];
+  const ys = [0, 0, h, h, 0, 0];
+
+  // Probability calc
+  function cdf(x) {
+    if (x <= a) return 0;
+    if (x >= b) return 1;
+    return (x - a) / (b - a);
+  }
+  let prob, lo, hi;
+  if (type === 'below') { prob = cdf(x1); lo = a; hi = Math.min(x1, b); }
+  else if (type === 'above') { prob = 1 - cdf(x1); lo = Math.max(x1, a); hi = b; }
+  else { prob = cdf(x2) - cdf(x1); lo = Math.max(x1, a); hi = Math.min(x2, b); }
+  prob = Math.max(0, Math.min(1, prob));
+  document.getElementById('u_result').textContent = prob.toFixed(4);
+
+  const pdfDs = { data: xs.map((x, i) => ({ x, y: ys[i] })), borderColor: '#5b8dee', borderWidth: 2.5, pointRadius: 0, tension: 0, fill: false };
+  const shadeDs = makeShadeDataset([a, lo, lo, hi, hi, b], [0, 0, h, h, h, 0], lo, hi, '#5b8dee');
+  // patch shade correctly
+  shadeDs.data = [{ x: lo, y: 0 }, { x: lo, y: h }, { x: hi, y: h }, { x: hi, y: 0 }];
+
+  ensureChart('chart_uniform', {
+    type: 'line',
+    data: { datasets: [shadeDs, pdfDs] },
+    options: { ...CHART_OPTS(), plugins: { ...CHART_OPTS().plugins, title: { display: true, text: `Uniform PDF  [${a}, ${b}]  — h = ${h.toFixed(4)}`, color: '#7a8299', font: { family: 'Space Mono', size: 11 } } }, scales: CHART_OPTS().scales }
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   TRIANGULAR
+══════════════════════════════════════════════════════ */
+function triPDF(x, a, c, b) {
+  if (x < a || x > b) return 0;
+  if (x <= c) return 2 * (x - a) / ((b - a) * (c - a));
+  return 2 * (b - x) / ((b - a) * (b - c));
+}
+function triCDF(x, a, c, b) {
+  if (x <= a) return 0;
+  if (x >= b) return 1;
+  if (x <= c) return ((x - a) ** 2) / ((b - a) * (c - a));
+  return 1 - ((b - x) ** 2) / ((b - a) * (b - c));
+}
+
+function drawTriangular() {
+  const a = +document.getElementById('t_a').value;
+  const c = +document.getElementById('t_c').value;
+  const b = +document.getElementById('t_b').value;
+  if (a >= b || c < a || c > b) return;
+  const type = getRadio('t_type');
+  showX2('t', type === 'between');
+  const x1 = +document.getElementById('t_x1').value;
+  const x2 = +document.getElementById('t_x2').value;
+
+  const pad = (b - a) * 0.12;
+  const xs = linspace(a - pad, b + pad, STEPS);
+  const ys = xs.map(x => triPDF(x, a, c, b));
+
+  let prob, lo, hi;
+  if (type === 'below') { prob = triCDF(x1, a, c, b); lo = a; hi = Math.min(x1, b); }
+  else if (type === 'above') { prob = 1 - triCDF(x1, a, c, b); lo = Math.max(x1, a); hi = b; }
+  else { prob = triCDF(x2, a, c, b) - triCDF(x1, a, c, b); lo = Math.max(x1, a); hi = Math.min(x2, b); }
+  prob = Math.max(0, Math.min(1, prob));
+  document.getElementById('t_result').textContent = prob.toFixed(4);
+
+  const pdfDs = { data: xs.map((x, i) => ({ x, y: ys[i] })), borderColor: '#e05b8d', borderWidth: 2.5, pointRadius: 0, tension: 0, fill: false };
+  const shadeXs = linspace(lo, hi, 200);
+  const shadeDs = { data: shadeXs.map(x => ({ x, y: triPDF(x, a, c, b) })), fill: 'origin', backgroundColor: '#e05b8d44', borderColor: 'transparent', pointRadius: 0 };
+
+  ensureChart('chart_triangular', {
+    type: 'line',
+    data: { datasets: [shadeDs, pdfDs] },
+    options: { ...CHART_OPTS(), plugins: { ...CHART_OPTS().plugins, title: { display: true, text: `Triangular PDF  a=${a} c=${c} b=${b}`, color: '#7a8299', font: { family: 'Space Mono', size: 11 } } }, scales: CHART_OPTS().scales }
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   LINEAR
+══════════════════════════════════════════════════════ */
+function drawLinear() {
+  const a = +document.getElementById('l_a').value;
+  const b = +document.getElementById('l_b').value;
+  if (a >= b) return;
+  const dir = document.getElementById('l_dir').value;
+  const type = getRadio('l_type');
+  showX2('l', type === 'between');
+  const x1 = +document.getElementById('l_x1').value;
+  const x2 = +document.getElementById('l_x2').value;
+
+  // f(x) = alpha*(x-a) or alpha*(b-x), normalised so integral=1
+  // Increasing: f(x)=k*(x-a), integral from a to b = k*(b-a)^2/2 = 1 → k=2/(b-a)^2
+  const L = b - a;
+  function pdf(x) {
+    if (x < a || x > b) return 0;
+    return dir === 'increasing' ? 2 * (x - a) / (L * L) : 2 * (b - x) / (L * L);
+  }
+  function cdf(x) {
+    if (x <= a) return 0;
+    if (x >= b) return 1;
+    return dir === 'increasing' ? ((x - a) / L) ** 2 : 1 - ((b - x) / L) ** 2;
+  }
+
+  const pad = L * 0.12;
+  const xs = linspace(a - pad, b + pad, STEPS);
+  const ys = xs.map(pdf);
+
+  let prob, lo, hi;
+  if (type === 'below') { prob = cdf(x1); lo = a; hi = Math.min(x1, b); }
+  else if (type === 'above') { prob = 1 - cdf(x1); lo = Math.max(x1, a); hi = b; }
+  else { prob = cdf(x2) - cdf(x1); lo = Math.max(x1, a); hi = Math.min(x2, b); }
+  prob = Math.max(0, Math.min(1, prob));
+  document.getElementById('l_result').textContent = prob.toFixed(4);
+
+  const pdfDs = { data: xs.map((x, i) => ({ x, y: ys[i] })), borderColor: '#e0c05b', borderWidth: 2.5, pointRadius: 0, tension: 0, fill: false };
+  const shadeXs = linspace(lo, hi, 200);
+  const shadeDs = { data: shadeXs.map(x => ({ x, y: pdf(x) })), fill: 'origin', backgroundColor: '#e0c05b44', borderColor: 'transparent', pointRadius: 0 };
+
+  ensureChart('chart_linear', {
+    type: 'line',
+    data: { datasets: [shadeDs, pdfDs] },
+    options: { ...CHART_OPTS(), plugins: { ...CHART_OPTS().plugins, title: { display: true, text: `Linear PDF (${dir})  [${a}, ${b}]`, color: '#7a8299', font: { family: 'Space Mono', size: 11 } } }, scales: CHART_OPTS().scales }
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   PIECEWISE
+══════════════════════════════════════════════════════ */
+let pwPieces = [
+  { a: 0, b: 2, h: 1 },
+  { a: 2, b: 5, h: 3 },
+  { a: 5, b: 8, h: 1.5 }
+];
+
+function renderPieceUI() {
+  const cont = document.getElementById('pw_pieces');
+  cont.innerHTML = '';
+  pwPieces.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.style.marginBottom = '10px';
+    row.innerHTML = `<div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px;">PIECE ${i+1}</div>
+    <div class="piece-row">
+      <div class="field" style="margin:0"><label>a${i}</label><input type="number" value="${p.a}" step="0.1" oninput="updatePiece(${i},'a',this.value)"/></div>
+      <div class="field" style="margin:0"><label>b${i}</label><input type="number" value="${p.b}" step="0.1" oninput="updatePiece(${i},'b',this.value)"/></div>
+      <div class="field" style="margin:0"><label>height</label><input type="number" value="${p.h}" step="0.1" min="0" oninput="updatePiece(${i},'h',this.value)"/></div>
+      ${i > 0 ? `<button class="btn-small" onclick="removePiece(${i})">✕</button>` : ''}
+    </div>`;
+    cont.appendChild(row);
+  });
+}
+function updatePiece(i, key, val) { pwPieces[i][key] = +val; drawPiecewise(); }
+function addPiece() {
+  const last = pwPieces[pwPieces.length - 1];
+  pwPieces.push({ a: last.b, b: last.b + 2, h: 1 });
+  renderPieceUI(); drawPiecewise();
+}
+function removePiece(i) { pwPieces.splice(i, 1); renderPieceUI(); drawPiecewise(); }
+
+function drawPiecewise() {
+  const type = getRadio('pw_type');
+  showX2('pw', type === 'between');
+  const x1 = +document.getElementById('pw_x1').value;
+  const x2 = +document.getElementById('pw_x2').value;
+
+  // Normalise heights
+  const totalArea = pwPieces.reduce((s, p) => s + Math.max(0, p.h) * Math.max(0, p.b - p.a), 0);
+  if (totalArea <= 0) return;
+  const scale = 1 / totalArea;
+
+  function pdf(x) {
+    for (const p of pwPieces) {
+      if (x >= p.a && x <= p.b) return Math.max(0, p.h) * scale;
+    }
+    return 0;
+  }
+  function cdf(x) {
+    let area = 0;
+    for (const p of pwPieces) {
+      if (x <= p.a) break;
+      const upper = Math.min(x, p.b);
+      area += Math.max(0, p.h) * Math.max(0, upper - p.a) * scale;
+    }
+    return Math.min(1, area);
+  }
+
+  const gMin = Math.min(...pwPieces.map(p => p.a));
+  const gMax = Math.max(...pwPieces.map(p => p.b));
+  const pad = (gMax - gMin) * 0.1;
+
+  // Build step points
+  const ptsX = [], ptsY = [];
+  ptsX.push(gMin - pad); ptsY.push(0);
+  ptsX.push(gMin - 0.001); ptsY.push(0);
+  for (const p of pwPieces) {
+    ptsX.push(p.a); ptsY.push(Math.max(0, p.h) * scale);
+    ptsX.push(p.b); ptsY.push(Math.max(0, p.h) * scale);
+  }
+  ptsX.push(gMax + 0.001); ptsY.push(0);
+  ptsX.push(gMax + pad); ptsY.push(0);
+
+  let prob, lo, hi;
+  if (type === 'below') { prob = cdf(x1); lo = gMin; hi = x1; }
+  else if (type === 'above') { prob = 1 - cdf(x1); lo = x1; hi = gMax; }
+  else { prob = cdf(x2) - cdf(x1); lo = x1; hi = x2; }
+  prob = Math.max(0, Math.min(1, prob));
+  document.getElementById('pw_result').textContent = prob.toFixed(4);
+
+  // Shade dataset: rebuild step within [lo, hi]
+  const shadePts = [];
+  for (const p of pwPieces) {
+    const sLo = Math.max(lo, p.a);
+    const sHi = Math.min(hi, p.b);
+    if (sLo < sHi) {
+      const h = Math.max(0, p.h) * scale;
+      shadePts.push({ x: sLo, y: 0 }, { x: sLo, y: h }, { x: sHi, y: h }, { x: sHi, y: 0 });
+    }
+  }
+
+  const pdfDs = { data: ptsX.map((x, i) => ({ x, y: ptsY[i] })), borderColor: '#5be0b0', borderWidth: 2.5, pointRadius: 0, tension: 0, fill: false };
+  const shadeDs = { data: shadePts, fill: 'origin', backgroundColor: '#5be0b044', borderColor: 'transparent', pointRadius: 0, tension: 0 };
+
+  ensureChart('chart_piecewise', {
+    type: 'line',
+    data: { datasets: [shadeDs, pdfDs] },
+    options: { ...CHART_OPTS(), plugins: { ...CHART_OPTS().plugins, title: { display: true, text: 'Piecewise Uniform PDF (normalised)', color: '#7a8299', font: { family: 'Space Mono', size: 11 } } }, scales: CHART_OPTS().scales }
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   NORMAL
+══════════════════════════════════════════════════════ */
+function drawNormal() {
+  const mu = +document.getElementById('n_mu').value;
+  const sigma = Math.max(0.01, +document.getElementById('n_sigma').value);
+  const type = getRadio('n_type');
+  showX2('n', type === 'between');
+  const x1 = +document.getElementById('n_x1').value;
+  const x2 = +document.getElementById('n_x2').value;
+
+  const spread = 4 * sigma;
+  const xs = linspace(mu - spread, mu + spread, STEPS);
+  const ys = xs.map(x => normPDF(x, mu, sigma));
+
+  let prob, lo, hi;
+  if (type === 'below') { prob = normCDF(x1, mu, sigma); lo = mu - spread; hi = x1; }
+  else if (type === 'above') { prob = 1 - normCDF(x1, mu, sigma); lo = x1; hi = mu + spread; }
+  else { prob = normCDF(x2, mu, sigma) - normCDF(x1, mu, sigma); lo = x1; hi = x2; }
+  prob = Math.max(0, Math.min(1, prob));
+  document.getElementById('n_result').textContent = prob.toFixed(4);
+
+  const pdfDs = { data: xs.map((x, i) => ({ x, y: ys[i] })), borderColor: '#5b8dee', borderWidth: 2.5, pointRadius: 0, tension: 0.3, fill: false };
+  const shadeXs = linspace(Math.max(lo, mu - spread), Math.min(hi, mu + spread), 300);
+  const shadeDs = { data: shadeXs.map(x => ({ x, y: normPDF(x, mu, sigma) })), fill: 'origin', backgroundColor: '#5b8dee44', borderColor: 'transparent', pointRadius: 0, tension: 0.3 };
+
+  ensureChart('chart_normal', {
+    type: 'line',
+    data: { datasets: [shadeDs, pdfDs] },
+    options: { ...CHART_OPTS(), plugins: { ...CHART_OPTS().plugins, title: { display: true, text: `Normal PDF  μ=${mu}  σ=${sigma}`, color: '#7a8299', font: { family: 'Space Mono', size: 11 } } }, scales: CHART_OPTS().scales }
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   C9 — DATA FITTING
+══════════════════════════════════════════════════════ */
+let c9Data = [];
+
+function loadCSV(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const lines = e.target.result.split('\n').filter(l => l.trim());
+    const values = [];
+    lines.forEach(line => {
+      const cols = line.split(',');
+      // Try second column first, then first
+      const val = cols.length > 1 ? parseFloat(cols[1]) : parseFloat(cols[0]);
+      if (!isNaN(val)) values.push(val);
+    });
+    c9Data = values;
+    fitDistribution();
+  };
+  reader.readAsText(file);
+}
+
+function parseManualData() {
+  const raw = document.getElementById('manualData').value;
+  const values = raw.split('\n').map(l => parseFloat(l.trim())).filter(v => !isNaN(v));
+  c9Data = values;
+  if (values.length > 3) fitDistribution();
+}
+
+function fitDistribution() {
+  if (c9Data.length < 2) return;
+  const dist = document.getElementById('fit_dist').value;
+  const data = [...c9Data].sort((a, b) => a - b);
+  const n = data.length;
+  const mn = data.reduce((s, v) => s + v, 0) / n;
+  const vr = data.reduce((s, v) => s + (v - mn) ** 2, 0) / n;
+  const sd = Math.sqrt(vr);
+  const dMin = data[0], dMax = data[n - 1];
+
+  // Show stats
+  document.getElementById('fit_stats').style.display = 'grid';
+  document.getElementById('fit_stats').innerHTML = `
+    <div class="stat-chip"><div class="k">N</div><div class="v">${n}</div></div>
+    <div class="stat-chip"><div class="k">Mean</div><div class="v">${mn.toFixed(3)}</div></div>
+    <div class="stat-chip"><div class="k">Std Dev</div><div class="v">${sd.toFixed(3)}</div></div>
+    <div class="stat-chip"><div class="k">Min</div><div class="v">${dMin.toFixed(3)}</div></div>
+    <div class="stat-chip"><div class="k">Max</div><div class="v">${dMax.toFixed(3)}</div></div>
+    <div class="stat-chip"><div class="k">Range</div><div class="v">${(dMax - dMin).toFixed(3)}</div></div>
+  `;
+
+  // Histogram bins
+  const nBins = Math.max(5, Math.ceil(Math.sqrt(n)));
+  const binW = (dMax - dMin) / nBins;
+  const bins = Array(nBins).fill(0);
+  data.forEach(v => {
+    let i = Math.floor((v - dMin) / binW);
+    if (i >= nBins) i = nBins - 1;
+    bins[i]++;
+  });
+  const binLabels = bins.map((_, i) => +(dMin + (i + 0.5) * binW).toFixed(3));
+  const binDensity = bins.map(c => c / (n * binW));
+
+  let pdfFn, paramText, interp;
+  const xs = linspace(dMin - (dMax - dMin) * 0.05, dMax + (dMax - dMin) * 0.05, 300);
+
+  if (dist === 'uniform') {
+    paramText = `a = ${dMin.toFixed(3)},  b = ${dMax.toFixed(3)},  h = ${(1/(dMax-dMin)).toFixed(4)}`;
+    pdfFn = x => (x >= dMin && x <= dMax) ? 1 / (dMax - dMin) : 0;
+    const theor_mean = (dMin + dMax) / 2, theor_sd = (dMax - dMin) / Math.sqrt(12);
+    const diff = Math.abs(mn - theor_mean) / theor_sd;
+    interp = diff < 0.3
+      ? `✔ Reasonable fit: sample mean (${mn.toFixed(2)}) is close to the theoretical uniform mean (${theor_mean.toFixed(2)}). Range [${dMin.toFixed(2)}, ${dMax.toFixed(2)}] covers data well.`
+      : `⚠ Moderate fit: the distribution of data may not be flat. Consider a different model if the histogram shows clear peaks.`;
+  } else if (dist === 'triangular') {
+    // Mode estimate from histogram peak
+    const peakBin = bins.indexOf(Math.max(...bins));
+    const mode = dMin + (peakBin + 0.5) * binW;
+    paramText = `a = ${dMin.toFixed(3)},  c = ${mode.toFixed(3)},  b = ${dMax.toFixed(3)}`;
+    pdfFn = x => triPDF(x, dMin, mode, dMax);
+    interp = `Triangular fit with mode ≈ ${mode.toFixed(2)} (estimated from histogram peak). If the data peaks sharply near ${mode.toFixed(1)}, this is a good model.`;
+  } else if (dist === 'linear') {
+    // Choose direction based on skew
+    const skew = (mn - (dMin + dMax) / 2) / sd;
+    const dir2 = skew >= 0 ? 'increasing' : 'decreasing';
+    const L = dMax - dMin;
+    paramText = `a = ${dMin.toFixed(3)},  b = ${dMax.toFixed(3)},  direction = ${dir2}`;
+    pdfFn = x => {
+      if (x < dMin || x > dMax) return 0;
+      return dir2 === 'increasing' ? 2 * (x - dMin) / (L * L) : 2 * (dMax - x) / (L * L);
+    };
+    interp = `Linear (${dir2}) fit based on sample skew (${skew.toFixed(2)}). Works well if data trends monotonically across the range.`;
+  } else if (dist === 'piecewise') {
+    // 3-piece piecewise uniform using quartiles
+    const q1 = data[Math.floor(n * 0.25)], q3 = data[Math.floor(n * 0.75)];
+    const pieces3 = [{ a: dMin, b: q1 }, { a: q1, b: q3 }, { a: q3, b: dMax }];
+    const areas3 = pieces3.map(p => p.b - p.a);
+    const counts3 = [0, 0, 0];
+    data.forEach(v => {
+      if (v <= q1) counts3[0]++;
+      else if (v <= q3) counts3[1]++;
+      else counts3[2]++;
+    });
+    const heights3 = counts3.map((c, i) => (c / n) / Math.max(0.001, areas3[i]));
+    paramText = `Piece 1: [${dMin.toFixed(2)}, ${q1.toFixed(2)}] h=${heights3[0].toFixed(4)}\nPiece 2: [${q1.toFixed(2)}, ${q3.toFixed(2)}] h=${heights3[1].toFixed(4)}\nPiece 3: [${q3.toFixed(2)}, ${dMax.toFixed(2)}] h=${heights3[2].toFixed(4)}`;
+    pdfFn = x => {
+      for (let i = 0; i < 3; i++) if (x >= pieces3[i].a && x <= pieces3[i].b) return heights3[i];
+      return 0;
+    };
+    interp = `Piecewise uniform with breakpoints at Q1=${q1.toFixed(2)} and Q3=${q3.toFixed(2)}. Heights reflect data density in each region.`;
+  } else { // normal
+    paramText = `μ = ${mn.toFixed(4)},  σ = ${sd.toFixed(4)}`;
+    pdfFn = x => normPDF(x, mn, sd);
+    const range = dMax - dMin;
+    const expRange = 6 * sd;
+    const ratio = range / expRange;
+    interp = ratio > 0.8 && ratio < 1.3
+      ? `✔ Reasonable fit: data range (${range.toFixed(2)}) ≈ 6σ (${expRange.toFixed(2)}), consistent with a normal distribution.`
+      : `⚠ Note: data range/6σ = ${ratio.toFixed(2)}. ${ratio < 0.8 ? 'Data may be more concentrated than normal.' : 'Data may have heavier tails or outliers.'}`;
+  }
+
+  document.getElementById('fit_params').innerHTML = `<strong>Estimated parameters:</strong><br/><span style="white-space:pre-line">${paramText}</span>`;
+  document.getElementById('fit_interp').style.display = '';
+  document.getElementById('fit_interp').textContent = interp;
+
+  // Histogram chart
+  const histCtx = document.getElementById('chart_c9_hist').getContext('2d');
+  if (charts['c9_hist']) charts['c9_hist'].destroy();
+  charts['c9_hist'] = new Chart(histCtx, {
+    type: 'bar',
+    data: {
+      labels: binLabels,
+      datasets: [{
+        label: 'Density',
+        data: binDensity,
+        backgroundColor: '#5be0b044',
+        borderColor: '#5be0b0',
+        borderWidth: 1.5,
+        barPercentage: 1,
+        categoryPercentage: 1
+      }]
+    },
+    options: {
+      responsive: true, animation: false,
+      plugins: { legend: { display: false }, title: { display: true, text: 'Histogram (density)', color: '#7a8299', font: { family: 'Space Mono', size: 11 } } },
+      scales: {
+        x: { type: 'linear', offset: false, grid: { color: '#1c2030' }, ticks: { color: '#7a8299', font: { family: 'Space Mono', size: 10 } } },
+        y: { grid: { color: '#1c2030' }, ticks: { color: '#7a8299', font: { family: 'Space Mono', size: 10 } }, beginAtZero: true }
+      }
+    }
+  });
+
+  // Combined chart
+  const pdfYs = xs.map(pdfFn);
+  const pdfCtx = document.getElementById('chart_c9_pdf').getContext('2d');
+  if (charts['c9_pdf']) charts['c9_pdf'].destroy();
+  charts['c9_pdf'] = new Chart(pdfCtx, {
+    type: 'line',
+    data: {
+      datasets: [
+        {
+          type: 'bar',
+          label: 'Histogram density',
+          data: binLabels.map((x, i) => ({ x, y: binDensity[i] })),
+          backgroundColor: '#5be0b022',
+          borderColor: '#5be0b066',
+          borderWidth: 1,
+          barPercentage: 1,
+          categoryPercentage: 1
+        },
+        {
+          label: 'Fitted PDF',
+          data: xs.map((x, i) => ({ x, y: pdfYs[i] })),
+          borderColor: '#e05b8d',
+          borderWidth: 2.5,
+          pointRadius: 0,
+          tension: 0.3,
+          fill: false
+        }
+      ]
+    },
+    options: {
+      responsive: true, animation: false,
+      plugins: {
+        legend: { labels: { color: '#7a8299', font: { family: 'Space Mono', size: 10 } } },
+        title: { display: true, text: `Fitted PDF overlay (${dist})`, color: '#7a8299', font: { family: 'Space Mono', size: 11 } }
+      },
+      scales: {
+        x: { type: 'linear', grid: { color: '#1c2030' }, ticks: { color: '#7a8299', font: { family: 'Space Mono', size: 10 } } },
+        y: { grid: { color: '#1c2030' }, ticks: { color: '#7a8299', font: { family: 'Space Mono', size: 10 } }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  renderPieceUI();
+  drawUniform();
+  drawTriangular();
+  drawLinear();
+  drawPiecewise();
+  drawNormal();
+
+  // Radio listeners for x2 visibility
+  ['u','t','l','pw','n'].forEach(p => {
+    document.querySelectorAll(`input[name="${p}_type"]`).forEach(r => {
+      r.addEventListener('change', () => {
+        showX2(p, r.value === 'between');
+      });
+    });
+  });
+});
+</script>
+</body>
+</html>
